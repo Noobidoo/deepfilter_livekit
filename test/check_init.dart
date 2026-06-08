@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:ffi';
 import 'dart:io';
 
@@ -22,7 +24,9 @@ Pointer<Int8> _strPtr(String s) {
       .lookup<NativeFunction<Pointer<Void> Function(IntPtr)>>('malloc')
       .asFunction<Pointer<Void> Function(int)>();
   final ptr = malloc(s.codeUnits.length + 1).cast<Int8>();
-  for (int i = 0; i < s.codeUnits.length; i++) ptr[i] = s.codeUnits[i];
+  for (int i = 0; i < s.codeUnits.length; i++) {
+    ptr[i] = s.codeUnits[i];
+  }
   ptr[s.codeUnits.length] = 0;
   return ptr;
 }
@@ -91,7 +95,9 @@ void main() {
 
     final input = malloc(frameSize * 4).cast<Float>();
     final output = malloc(frameSize * 4).cast<Float>();
-    for (int i = 0; i < frameSize; i++) input[i] = 0.0;
+    for (int i = 0; i < frameSize; i++) {
+      input[i] = 0.0;
+    }
     input[0] = 0.5; // a sample
 
     print('Processing $frameSize samples...');

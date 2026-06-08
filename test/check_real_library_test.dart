@@ -1,7 +1,8 @@
+// ignore_for_file: avoid_print
+
 import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:deepfilter_livekit/deepfilter_livekit.dart';
 
 void main() {
   test('isRealLibrary returns true when real CAPI is loaded', () {

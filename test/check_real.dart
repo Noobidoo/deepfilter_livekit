@@ -1,5 +1,6 @@
+// ignore_for_file: avoid_print
+
 import 'dart:ffi';
-import 'dart:io';
 
 void main() {
   final runnerDir =

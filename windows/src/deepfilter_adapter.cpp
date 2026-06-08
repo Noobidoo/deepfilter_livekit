@@ -175,7 +175,36 @@ static char* resolve_model_path(const char* model_path) {
     return tar_path;
   }
 
-  TRACE("resolve_model_path no tar.gz found in models dir");
+  TRACE("resolve_model_path no tar.gz found in models dir, checking exe dir");
+
+  {
+    char exe_path[MAX_PATH] = {};
+    DWORD exe_len = GetModuleFileNameA(nullptr, exe_path, MAX_PATH);
+    if (exe_len > 0 && exe_len < MAX_PATH) {
+      char* last_slash = strrchr(exe_path, '\\');
+      if (last_slash) {
+        size_t dir_len = last_slash - exe_path;
+        char* exe_models = new char[dir_len + 8];
+        strncpy_s(exe_models, dir_len + 8, exe_path, dir_len);
+        strcat_s(exe_models, dir_len + 8, "\\models");
+        {
+          char buf2[512];
+          snprintf(buf2, sizeof(buf2), "resolve_model_path checking exe: %s", exe_models);
+          OutputDebugStringA(buf2);
+        }
+        if (directory_exists(exe_models)) {
+          char* exe_tar = find_first_file(exe_models, "*.tar.gz");
+          if (exe_tar) {
+            delete[] exe_models;
+            return exe_tar;
+          }
+        }
+        delete[] exe_models;
+      }
+    }
+  }
+
+  TRACE("resolve_model_path no model found anywhere");
   return nullptr;
 }
 

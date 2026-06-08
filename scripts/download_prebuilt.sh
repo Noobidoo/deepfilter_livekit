@@ -34,4 +34,8 @@ curl -fsSL "$BASE_URL/libdeep_filter_lib-ios.a" \
   -o "$OUT_DIR/ios/Frameworks/libdeep_filter_lib.a" || \
   echo "iOS lib not available yet"
 
-echo "Prebuilt libraries downloaded successfully."
+# DeepFilterNet3 ONNX model
+MODEL_URL="https://github.com/Rikorose/DeepFilterNet/raw/main/models/DeepFilterNet3_onnx.tar.gz"
+download "$MODEL_URL" "$OUT_DIR/windows/lib/models/DeepFilterNet3_onnx.tar.gz"
+
+echo "Prebuilt libraries and model downloaded successfully."

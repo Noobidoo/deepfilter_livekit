@@ -38,4 +38,10 @@ try {
     Download-File "$BaseUrl/libdeep_filter_lib-ios.a" "$iosDir\libdeep_filter_lib.a"
 } catch { Write-Warning "iOS lib not available: $_" }
 
-Write-Host "Prebuilt libraries downloaded successfully."
+# DeepFilterNet3 ONNX model (same for all platforms — placed in windows/lib/models/
+# so CMake can copy it to the build output on all host platforms)
+$ModelUrl = "https://github.com/Rikorose/DeepFilterNet/raw/main/models/DeepFilterNet3_onnx.tar.gz"
+$ModelDir = Join-Path $OutDir "windows\lib\models"
+Download-File $ModelUrl "$ModelDir\DeepFilterNet3_onnx.tar.gz"
+
+Write-Host "Prebuilt libraries and model downloaded successfully."

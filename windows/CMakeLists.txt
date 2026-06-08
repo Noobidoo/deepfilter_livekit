@@ -55,9 +55,26 @@ if(EXISTS "${DEEP_FILTER_DLL}")
   set(${PROJECT_NAME}_bundled_libraries "${DEEP_FILTER_DLL}" PARENT_SCOPE)
 endif()
 
-# Bundle model files next to the plugin DLL
+# Copy deepfilter.dll (Rust runtime) next to the plugin DLL — capi depends on it
+set(DEEP_FILTER_RUNTIME "${CMAKE_CURRENT_SOURCE_DIR}/lib/deepfilter.dll")
+if(EXISTS "${DEEP_FILTER_RUNTIME}")
+  add_custom_command(TARGET ${PLUGIN_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DEEP_FILTER_RUNTIME}"
+      "$<TARGET_FILE_DIR:${PLUGIN_NAME}>/deepfilter.dll"
+    COMMENT "deepfilter_adapter: copying deepfilter.dll (Rust runtime) to output"
+  )
+endif()
+
+# Bundle model files next to the plugin DLL.
+# Check windows/lib/models/ first (download_prebuilt script destination),
+# then fall back to ../assets/models/ (alternative placement).
 set(MODELS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/models")
-if(EXISTS "${MODELS_DIR}/config.ini")
+if(NOT EXISTS "${MODELS_DIR}")
+  set(MODELS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../assets/models")
+endif()
+file(GLOB _MODEL_FILES "${MODELS_DIR}/*.tar.gz" "${MODELS_DIR}/*.tar")
+if(_MODEL_FILES)
   add_custom_command(TARGET ${PLUGIN_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
       "${MODELS_DIR}"

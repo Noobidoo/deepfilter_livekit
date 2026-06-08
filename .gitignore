@@ -65,14 +65,13 @@ example/android/app/src/main/java/io/flutter/plugins/
 .DS_Store
 Thumbs.db
 
-# Prebuilt native libraries — fetched by download_prebuilt scripts / CI
-windows/lib/
-linux/lib/
-macos/lib/
+# Ignore the large static .lib (56 MB)
+windows/lib/lib/windows-x86_64/deepfilter.lib
+
+# Extracted model subdir — not committed (only the .tar.gz is needed)
+assets/models/DeepFilterNet3/
 ios/Frameworks/
 
-# Model files — downloaded separately, not versioned
-assets/models/DeepFilterNet3/
 windows/lib/models/
 linux/lib/models/
 macos/lib/models/

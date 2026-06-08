@@ -1,4 +1,4 @@
-name: deepfilter_livekit build and release
+name: deepfilter_livekit CI
 
 on:
   push:
@@ -33,49 +33,45 @@ jobs:
       - run: flutter pub get
       - run: flutter test
 
-  package:
+  build-example:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [analyze, test]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            build-cmd: cd example && flutter build linux --release
+          - os: windows-latest
+            build-cmd: cd example && flutter build windows --release
+          - os: macos-latest
+            build-cmd: cd example && flutter build macos --release
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Build example app
+        run: ${{ matrix.build-cmd }}
+
+  package:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-example]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Download prebuilt libraries (desktop)
-        run: bash scripts/download_prebuilt.sh
-
-      - name: Download prebuilt libraries (mobile, best-effort)
-        run: |
-          BASE="https://github.com/Noobidoo/DeepFilterNet/releases/download/v0.5.7-capi.1"
-          mkdir -p android/src/main/jniLibs/arm64-v8a
-          curl -fsSL "$BASE/libdeep_filter_lib-arm64-android.so" \
-            -o android/src/main/jniLibs/arm64-v8a/libdeep_filter_lib.so || \
-            echo "Android lib not available yet (stub will be used)"
-          mkdir -p ios/Frameworks
-          curl -fsSL "$BASE/libdeep_filter_lib-ios.a" \
-            -o ios/Frameworks/libdeep_filter_lib.a || \
-            echo "iOS lib not available yet (stub will be used)"
-
-      - name: Download model
-        run: |
-          MODEL_URL="https://github.com/Rikorose/DeepFilterNet/raw/main/models/DeepFilterNet3_onnx.tar.gz"
-          mkdir -p assets/models/DeepFilterNet3
-          curl -fsSL "$MODEL_URL" -o assets/models/DeepFilterNet3_onnx.tar.gz
-          tar -xzf assets/models/DeepFilterNet3_onnx.tar.gz -C assets/models/
-          mkdir -p windows/lib/models
-          cp assets/models/DeepFilterNet3_onnx.tar.gz windows/lib/models/
 
       - name: Create release tarball
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           PKG="deepfilter_livekit-$VERSION"
-          mkdir -p "/tmp/$PKG"
-          rsync -av --exclude='.git' --exclude='.dart_tool' --exclude='.pub' \
-            --exclude='build' --exclude='example/build' --exclude='example/.dart_tool' \
-            --exclude='**/ephemeral' --exclude='**/Pods' --exclude='**/.symlinks' \
-            --exclude='*.lock' --exclude='*.iml' --exclude='.idea' --exclude='.vscode' \
-            --exclude='*.swp' --exclude='*.swo' \
-            . "/tmp/$PKG/"
-          cd /tmp && tar -czf "$PKG.tar.gz" "$PKG/" && mv "$PKG.tar.gz" "$GITHUB_WORKSPACE/"
+          cd /tmp
+          mkdir -p "$PKG"
+          git -C "$GITHUB_WORKSPACE" archive --format=tar \
+            --prefix="$PKG/" HEAD | tar -xf -
+          tar -czf "$PKG.tar.gz" "$PKG/"
+          mv "$PKG.tar.gz" "$GITHUB_WORKSPACE/"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

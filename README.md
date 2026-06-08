@@ -206,6 +206,21 @@ The output is at `target/release/deep_filter_lib.{dll,so,dylib}` (or `target/rel
 
 Prebuilt binaries are published at each fork [release](https://github.com/Noobidoo/DeepFilterNet/releases).
 
+## Citation
+
+This plugin bundles the **DeepFilterNet3** neural noise suppression model. If you use it in your research or application, please cite the original paper:
+
+> H. Schröter, T. Rosenkranz, A. N. Escalante-B. and A. Maier, "DeepFilterNet: Perceptually Motivated Real-Time Speech Enhancement," in *INTERSPEECH*, 2023.
+
+```bibtex
+@inproceedings{schroeter2023deepfilternet3,
+  title = {{DeepFilterNet}: Perceptually Motivated Real-Time Speech Enhancement},
+  author = {Schröter, Hendrik and Rosenkranz, Tobias and Escalante-B., Alberto N. and Maier, Andreas},
+  booktitle = {INTERSPEECH},
+  year = {2023},
+}
+```
+
 ## License
 
 MIT

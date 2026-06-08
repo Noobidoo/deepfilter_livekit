@@ -19,7 +19,7 @@ Real-time neural network-based noise suppression using DeepFilterNet for LiveKit
   s.vendored_libraries = '**/*.a', '**/*.dylib'
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
-    'OTHER_LDFLAGS' => '-L$(PODS_TARGET_SRCROOT) -ldeep_filter_lib -lonnxruntime',
+    'SWIFT_OBJC_BRIDGING_HEADER' => '$(PODS_TARGET_SRCROOT)/ios/Classes/deepfilter_livekit-Bridging-Header.h',
   }
   s.swift_version = '5.0'
 end

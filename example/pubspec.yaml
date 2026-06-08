@@ -11,6 +11,9 @@ dependencies:
     sdk: flutter
   deepfilter_livekit:
     path: ..
+  livekit_client: ^2.7.0
+  flutter_webrtc: ^1.4.0
+  dart_jsonwebtoken: ^3.4.1
 
 flutter:
   uses-material-design: true

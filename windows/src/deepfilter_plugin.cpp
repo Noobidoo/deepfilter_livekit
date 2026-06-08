@@ -1,6 +1,5 @@
-#include "deepfilter_livekit/deepfilter_plugin.h"
+#include "deepfilter_livekit/deep_filter_plugin.h"
 
-#include <flutter/encodable_map.h>
 #include <flutter/encodable_value.h>
 #include <flutter/standard_method_codec.h>
 
@@ -130,3 +129,10 @@ void DeepFilterPlugin::HandleMethodCall(
 }
 
 }  // namespace deepfilter_livekit
+
+void DeepFilterPluginRegisterWithRegistrar(
+    FlutterDesktopPluginRegistrarRef registrar) {
+  deepfilter_livekit::DeepFilterPlugin::RegisterWithRegistrar(
+      flutter::PluginRegistrarManager::GetInstance()
+          ->GetRegistrar<flutter::PluginRegistrarWindows>(registrar));
+}

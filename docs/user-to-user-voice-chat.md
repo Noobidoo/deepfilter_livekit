@@ -22,7 +22,8 @@ Noise suppression runs **natively before WebRTC encoding** — the remote user o
 
 - Flutter 3.27+ / Dart 3.10+
 - A LiveKit server (or [LiveKit Cloud](https://cloud.livekit.io))
-- DeepFilterNet prebuilt binaries downloaded via `scripts/download_prebuilt.ps1`
+- Prebuilt libraries downloaded via `scripts/download_prebuilt.ps1`
+- A DeepFilterNet ONNX model (download from upstream `models/` directory)
 
 ## 1. Project Setup
 
@@ -48,6 +49,23 @@ chmod +x scripts/download_prebuilt.sh
 ./scripts/download_prebuilt.sh
 ```
 
+The script downloads `deep_filter_lib.dll` (Windows), `libdeep_filter_lib.so` (Linux), and `libdeep_filter_lib.dylib` (macOS) from the [Noobidoo/DeepFilterNet](https://github.com/Noobidoo/DeepFilterNet) fork release.
+
+If a library is absent at runtime, the plugin automatically falls back to a pass-through stub — the app still works without noise suppression.
+
+### Download an ONNX model
+
+Prebuilt CI releases only include the capi library, not the model. Download a model separately:
+
+```bash
+# Download DeepFilterNet3 ONNX model
+curl -fsSL https://github.com/Rikorose/DeepFilterNet/raw/main/models/DeepFilterNet3_onnx.tar.gz \
+  -o windows/lib/models/DeepFilterNet3_onnx.tar.gz
+```
+
+Place the **tar.gz file** at `windows/lib/models/DeepFilterNet3_onnx.tar.gz`. CMake copies it to the
+build output automatically. The adapter finds it at runtime — no `modelPath` argument needed.
+
 ## 2. Basic Voice Chat Service
 
 Create a service that manages the LiveKit room and noise suppression:
@@ -71,7 +89,6 @@ class VoiceChatService {
   }) async {
     if (!DeepFilterProcessor.isSupported) {
       debugPrint('DeepFilterNet not available on this platform');
-      // You can still proceed without noise suppression
     }
 
     // 1. Create the room and listen for incoming tracks
@@ -82,22 +99,36 @@ class VoiceChatService {
     _localTrack = await LocalAudioTrack.create();
 
     // 3. Create and attach noise suppression processor
-    //    Once attached, all mic audio is denoised natively before publishing.
+    //    Processing starts when the track is published (onPublish).
+    //    Set enabled: false to start muted and toggle later.
     _processor = DeepFilterProcessor(
       modelPath: modelPath,
       sampleRate: sampleRate,
+      enabled: true,
     );
     await _localTrack!.setProcessor(_processor);
+
+    // Optional: verify processing is fully active
+    if (DeepFilterProcessor.isRealLibrary) {
+      debugPrint('DeepFilter capi loaded. APM hook: ${DeepFilterProcessor.isApmAttached}');
+      // Tune suppression strength if needed (default 100 dB = max)
+      // DeepFilterNative.setAttenLim(60.0); // moderate
+    }
 
     // 4. Connect to LiveKit room and publish audio
     await _room?.connect(url, token, options: RoomOptions(
       defaultAudioPublishOptions: AudioPublishOptions(
-        dtx: false, // disable DTX for full-quality noise suppression
+        dtx: false,
       ),
     ));
 
     await _room?.localParticipant?.publishTrack(_localTrack);
     debugPrint('Connected to room: ${_room?.name}');
+  }
+
+  /// Toggle noise suppression at runtime
+  void toggleNoiseSuppression(bool active) {
+    _processor?.setEnabled(active);
   }
 
   /// Handle incoming remote audio tracks
@@ -156,6 +187,7 @@ class _VoiceChatScreenState extends State<VoiceChatScreen> {
   bool _connecting = false;
   bool _connected = false;
   bool _muted = false;
+  bool _suppression = true;
 
   @override
   void initState() {
@@ -211,7 +243,8 @@ class _VoiceChatScreenState extends State<VoiceChatScreen> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 32),
-            if (_connected)
+            if (_connected) ...[
+              // Mute toggle
               IconButton(
                 icon: Icon(
                   _muted ? Icons.mic_off : Icons.mic,
@@ -222,6 +255,18 @@ class _VoiceChatScreenState extends State<VoiceChatScreen> {
                   setState(() => _muted = !_muted);
                 },
               ),
+              const SizedBox(height: 16),
+              // Noise suppression toggle
+              SwitchListTile(
+                title: const Text('Noise Suppression'),
+                subtitle: Text(_suppression ? 'Active' : 'Bypassed'),
+                value: _suppression,
+                onChanged: (v) {
+                  _service.toggleNoiseSuppression(v);
+                  setState(() => _suppression = v);
+                },
+              ),
+            ],
           ],
         ),
       ),
@@ -274,15 +319,42 @@ app.get('/token', (req, res) => {
 
 ## 5. Platform-Specific Notes
 
-On all platforms the processing runs **natively at the audio layer** — the platform plugin intercepts the audio stream before WebRTC encoding and applies DeepFilterNet in-place.
+On all supported platforms the processing runs **natively at the audio layer** — the platform plugin dynamically loads the capi library at runtime and applies DeepFilterNet in-place before WebRTC encoding.
 
-| Platform | Native Plugin | Usage |
-|----------|--------------|-------|
-| All five | Windows/Linux/macOS/Android/iOS | `await track.setProcessor(DeepFilterProcessor())` |
+| Platform | Binary | Loading | Status |
+|----------|--------|---------|--------|
+| Windows | `deep_filter_lib.dll` | `LoadLibrary` + `GetProcAddress` | Supported |
+| Linux | `libdeep_filter_lib.so` | `dlopen` + `dlsym` | Supported |
+| macOS | `libdeep_filter_lib.dylib` | `dlopen` + `dlsym` | Supported |
+| Android | `libdeep_filter_lib.so` | `dlopen` (via JNI) | CI not yet building |
+| iOS | `libdeep_filter_lib.dylib` | `dlopen` | CI not yet building |
+
+When the capi library is absent, each adapter falls back to a simple pass-through stub — audio flows unmodified.
+
+### Runtime enable/disable
+
+```dart
+final processor = DeepFilterProcessor(enabled: true);
+await track.setProcessor(processor);
+
+// Bypass without detaching
+processor.setEnabled(false);
+
+// Re-enable
+processor.setEnabled(true);
+```
+
+The `enabled` constructor parameter (default `true`) avoids a transient period of active processing on connect. `setEnabled()` toggles processing without detaching the processor from the track.
+
+### Model path
+
+```dart
+DeepFilterProcessor(modelPath: 'assets/models/DeepFilterNet3')
+```
+
+If no model path is given, the capi library uses its built-in default model.
 
 ### Custom audio pipelines
-
-If you are working with raw PCM frames outside of LiveKit (e.g., file processing, custom audio graph):
 
 ```dart
 final processor = DeepFilterProcessor();
@@ -301,8 +373,7 @@ if (DeepFilterProcessor.isSupported) {
   final processor = DeepFilterProcessor();
   await track.setProcessor(processor);
 } else {
-  // Fallback: proceed without noise suppression
-  debugPrint('DeepFilterNet not bundled for this platform');
+  debugPrint('DeepFilterNet not available on this platform');
 }
 ```
 
@@ -351,3 +422,4 @@ if (DeepFilterProcessor.isSupported) {
 | No audio from remote | Muted or track not published | Check `localParticipant.publishTrack()` |
 | Echo / feedback | Suppression applied to playback | Only call `setProcessor()` on the **local** track |
 | `processFrame()` throws on mobile | Sync API not available on mobile | Use `processAsync()` or rely on native `TrackProcessor` integration |
+| Audio still noisy but `isProcessing` is `true` | Library falls back to pass-through stub | Confirm capi library exists at the expected path; check `dlopen`/`LoadLibrary` logs |

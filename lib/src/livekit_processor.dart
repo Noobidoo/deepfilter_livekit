@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -12,6 +13,16 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
   /// Whether the native DeepFilterNet library is available on this platform.
   /// Check this before attaching the processor.
   static bool get isSupported => DeepFilterNative.isAvailable;
+
+  /// Whether the real capi library was loaded (vs the pass-through stub).
+  ///
+  /// When `false`, the adapter fallback is in use and audio passes through
+  /// unmodified — usually because `deep_filter_lib.{dll,so,dylib}` is missing
+  /// from the build output. Run `scripts/download_prebuilt.ps1` and rebuild.
+  static bool get isRealLibrary => DeepFilterNative.isRealLibrary;
+
+  /// Whether the WebRTC APM capture hook is attached and processing is active.
+  static bool get isApmAttached => DeepFilterNative.isApmAttached;
 
   /// Returns `null` — we do not replace the track.
   ///
@@ -45,8 +56,11 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
     bool autoInit = true,
     bool enabled = true,
   }) : _enabled = enabled {
+    debugPrint('[df:processor] DeepFilterProcessor() autoInit=$autoInit modelPath=$modelPath sampleRate=$sampleRate');
     if (autoInit) {
+      debugPrint('[df:processor] calling DeepFilterNative.init()');
       DeepFilterNative.init(modelPath: modelPath, sampleRate: sampleRate);
+      debugPrint('[df:processor] DeepFilterNative.init() returned');
     }
   }
 
@@ -59,6 +73,7 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
   void setEnabled(bool value) {
     _enabled = value;
     _processing = _enabled && _published;
+    DeepFilterNative.setApmEnabled(value);
   }
 
   @override
@@ -77,18 +92,21 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
   Future<void> destroy() async {
     _processing = false;
     _published = false;
+    DeepFilterNative.setApmEnabled(false);
   }
 
   @override
   Future<void> onPublish(Room room) async {
     _published = true;
     _processing = _enabled;
+    DeepFilterNative.setApmEnabled(_enabled);
   }
 
   @override
   Future<void> onUnpublish() async {
     _processing = false;
     _published = false;
+    DeepFilterNative.setApmEnabled(false);
   }
 
   /// Process a raw PCM frame synchronously (desktop FFI only).

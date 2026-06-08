@@ -49,3 +49,15 @@ pubspec.lock
 # OS files
 .DS_Store
 Thumbs.db
+
+# Prebuilt native libraries — fetched by download_prebuilt scripts / CI
+windows/lib/
+linux/lib/
+macos/lib/
+ios/Frameworks/
+
+# Model files — downloaded separately, not versioned
+assets/models/DeepFilterNet3/
+windows/lib/models/
+linux/lib/models/
+macos/lib/models/

@@ -73,7 +73,7 @@ class DeepFilterPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
 
     companion object {
         init {
-            System.loadLibrary("deep_filter_lib")
+            System.loadLibrary("deep_filter_jni")
         }
     }
 }

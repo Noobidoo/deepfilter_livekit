@@ -46,6 +46,21 @@ build/
 # Libraries should not commit pubspec.lock
 pubspec.lock
 
+# Example app — generated platform files
+example/android/
+example/ios/
+example/linux/flutter/ephemeral/
+example/macos/Flutter/ephemeral/
+example/macos/Flutter/Generated.xcconfig
+example/macos/Flutter/flutter_export_environment.sh
+example/ios/Flutter/Generated.xcconfig
+example/ios/Flutter/flutter_export_environment.sh
+example/ios/Flutter/ephemeral/
+example/ios/Runner/GeneratedPluginRegistrant.h
+example/ios/Runner/GeneratedPluginRegistrant.m
+example/android/local.properties
+example/android/app/src/main/java/io/flutter/plugins/
+
 # OS files
 .DS_Store
 Thumbs.db

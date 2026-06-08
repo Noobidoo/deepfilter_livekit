@@ -40,7 +40,8 @@ void main() {
       lk.dispose();
     });
 
-    test('dispose only schedules async disable, isEnabled remains true', () async {
+    test('dispose only schedules async disable, isEnabled remains true',
+        () async {
       final lk = LiveKitDeepFilter();
       lk.dispose();
       expect(lk.isEnabled, true);
@@ -84,7 +85,8 @@ void main() {
       expect(processor.isProcessing, false);
     });
 
-    test('onPublish respects enabled — when false, isProcessing stays false', () async {
+    test('onPublish respects enabled — when false, isProcessing stays false',
+        () async {
       final processor = DeepFilterProcessor(autoInit: false, enabled: false);
       await processor.onPublish(Room());
       expect(processor.isProcessing, false);
@@ -106,7 +108,8 @@ void main() {
       expect(processor.isProcessing, false);
     });
 
-    test('setEnabled(true) resumes processing after toggle if published', () async {
+    test('setEnabled(true) resumes processing after toggle if published',
+        () async {
       final processor = DeepFilterProcessor(autoInit: false);
       await processor.onPublish(Room());
       processor.setEnabled(false);
@@ -117,7 +120,8 @@ void main() {
       expect(processor.isProcessing, true);
     });
 
-    test('setEnabled(true) does not start processing when not published', () async {
+    test('setEnabled(true) does not start processing when not published',
+        () async {
       final processor = DeepFilterProcessor(autoInit: false, enabled: false);
       processor.setEnabled(true);
       expect(processor.enabled, true);
@@ -148,7 +152,8 @@ void main() {
 
       processor.setEnabled(false);
       processor.setEnabled(true);
-      expect(processor.isProcessing, false, reason: 'was unpublished by destroy');
+      expect(processor.isProcessing, false,
+          reason: 'was unpublished by destroy');
     });
 
     test('processedTrack always returns null', () {
@@ -206,7 +211,10 @@ void main() {
           calls.add(call);
           if (call.method == 'processFrame') {
             final inputBytes = call.arguments['input'] as Uint8List;
-            return <String, dynamic>{'output': Uint8List.fromList(inputBytes), 'ret': 0};
+            return <String, dynamic>{
+              'output': Uint8List.fromList(inputBytes),
+              'ret': 0
+            };
           }
           return null;
         },
@@ -300,7 +308,8 @@ void main() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
         const MethodChannel('io.deepfilter.livekit'),
-        (MethodCall methodCall) async => throw PlatformException(code: 'NOT_FOUND'),
+        (MethodCall methodCall) async =>
+            throw PlatformException(code: 'NOT_FOUND'),
       );
 
       final available = await DeepFilterMethodChannel.isAvailable;
@@ -364,7 +373,8 @@ void main() {
 
     test('processFrameAsync throws when not initialized', () async {
       expect(
-        () => DeepFilterNative.processFrameAsync(Float32List(480), Float32List(480)),
+        () => DeepFilterNative.processFrameAsync(
+            Float32List(480), Float32List(480)),
         throwsA(isA<DeepFilterException>()),
       );
     });

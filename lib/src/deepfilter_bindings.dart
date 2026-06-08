@@ -11,10 +11,16 @@ typedef _DfInitC = Pointer<_DfState> Function(Pointer<Int8>, Int32);
 typedef _DfInitDart = Pointer<_DfState> Function(Pointer<Int8>, int);
 
 typedef _DfProcessC = Int32 Function(
-  Pointer<_DfState>, Pointer<Float>, Pointer<Float>, Int32,
+  Pointer<_DfState>,
+  Pointer<Float>,
+  Pointer<Float>,
+  Int32,
 );
 typedef _DfProcessDart = int Function(
-  Pointer<_DfState>, Pointer<Float>, Pointer<Float>, int,
+  Pointer<_DfState>,
+  Pointer<Float>,
+  Pointer<Float>,
+  int,
 );
 
 typedef _DfFrameSizeC = Int32 Function(Pointer<_DfState>);
@@ -99,7 +105,8 @@ abstract final class DeepFilterNative {
   }
 
   static void init({String? modelPath, int sampleRate = 48000}) {
-    debugPrint('[df:bindings] init() called modelPath=$modelPath sampleRate=$sampleRate _initialized=$_initialized');
+    debugPrint(
+        '[df:bindings] init() called modelPath=$modelPath sampleRate=$sampleRate _initialized=$_initialized');
     if (_initialized) {
       debugPrint('[df:bindings] init: already initialized, returning');
       return;
@@ -134,9 +141,11 @@ abstract final class DeepFilterNative {
     final modelPtr = modelPath != null && modelPath.isNotEmpty
         ? modelPath.toNativeUtf8(allocator: calloc).cast<Int8>()
         : nullptr;
-    debugPrint('[df:bindings] init: calling dfInit (FFI) modelPtr=${modelPtr != nullptr ? "non-null" : "null"} sampleRate=$sampleRate');
+    debugPrint(
+        '[df:bindings] init: calling dfInit (FFI) modelPtr=${modelPtr != nullptr ? "non-null" : "null"} sampleRate=$sampleRate');
     _state = dfInit(modelPtr, sampleRate);
-    debugPrint('[df:bindings] init: dfInit returned state=${_state != null ? _state!.address : 0}');
+    debugPrint(
+        '[df:bindings] init: dfInit returned state=${_state != null ? _state!.address : 0}');
     if (modelPtr != nullptr) calloc.free(modelPtr);
 
     if (_state == nullptr || _state!.address == 0) {
@@ -149,7 +158,8 @@ abstract final class DeepFilterNative {
     _frameSize = dfFrameSize(_state!);
     _sampleRate = dfSampleRate(_state!);
     _initialized = true;
-    debugPrint('[df:bindings] init: complete frameSize=$_frameSize sampleRate=$_sampleRate');
+    debugPrint(
+        '[df:bindings] init: complete frameSize=$_frameSize sampleRate=$_sampleRate');
   }
 
   static void _initChannel(String? modelPath, int sampleRate) {
@@ -163,7 +173,8 @@ abstract final class DeepFilterNative {
 
   static int processFrame(Float32List input, Float32List output) {
     if (!_initialized) {
-      throw DeepFilterException('DeepFilter not initialized. Call init() first.');
+      throw DeepFilterException(
+          'DeepFilter not initialized. Call init() first.');
     }
 
     if (Platform.isAndroid || Platform.isIOS) {
@@ -199,9 +210,11 @@ abstract final class DeepFilterNative {
     }
   }
 
-  static Future<int> processFrameAsync(Float32List input, Float32List output) async {
+  static Future<int> processFrameAsync(
+      Float32List input, Float32List output) async {
     if (!_initialized) {
-      throw DeepFilterException('DeepFilter not initialized. Call init() first.');
+      throw DeepFilterException(
+          'DeepFilter not initialized. Call init() first.');
     }
 
     if (Platform.isAndroid || Platform.isIOS) {
@@ -212,7 +225,8 @@ abstract final class DeepFilterNative {
     return Future.sync(() => processFrame(input, output));
   }
 
-  static Future<int> _processChannel(Float32List input, Float32List output) async {
+  static Future<int> _processChannel(
+      Float32List input, Float32List output) async {
     const channel = MethodChannel('io.deepfilter.livekit');
     final result = await channel.invokeMethod<Map>('processFrame', {
       'input': input.buffer.asUint8List(),
@@ -246,7 +260,8 @@ abstract final class DeepFilterNative {
     if (!_initialized) return;
 
     if (Platform.isAndroid || Platform.isIOS) {
-      const MethodChannel('io.deepfilter.livekit').invokeMethod<void>('dispose');
+      const MethodChannel('io.deepfilter.livekit')
+          .invokeMethod<void>('dispose');
     } else if (_state != null && _state!.address != 0) {
       final lib = _load();
       lib
@@ -304,8 +319,9 @@ abstract final class DeepFilterNative {
     try {
       final lib = _load();
       return lib
-          .lookup<NativeFunction<_DfApmIsAttachedC>>('df_apm_is_attached')
-          .asFunction<_DfApmIsAttachedDart>()() != 0;
+              .lookup<NativeFunction<_DfApmIsAttachedC>>('df_apm_is_attached')
+              .asFunction<_DfApmIsAttachedDart>()() !=
+          0;
     } catch (_) {
       return false;
     }

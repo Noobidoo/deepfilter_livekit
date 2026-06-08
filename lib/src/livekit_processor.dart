@@ -56,7 +56,8 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
     bool autoInit = true,
     bool enabled = true,
   }) : _enabled = enabled {
-    debugPrint('[df:processor] DeepFilterProcessor() autoInit=$autoInit modelPath=$modelPath sampleRate=$sampleRate');
+    debugPrint(
+        '[df:processor] DeepFilterProcessor() autoInit=$autoInit modelPath=$modelPath sampleRate=$sampleRate');
     if (autoInit) {
       debugPrint('[df:processor] calling DeepFilterNative.init()');
       DeepFilterNative.init(modelPath: modelPath, sampleRate: sampleRate);

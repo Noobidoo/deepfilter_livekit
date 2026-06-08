@@ -11,12 +11,16 @@ typedef _DfFrameSizeC = Int32 Function(Pointer<_DfState>);
 typedef _DfFrameSizeDart = int Function(Pointer<_DfState>);
 typedef _DfDestroyC = Void Function(Pointer<_DfState>);
 typedef _DfDestroyDart = void Function(Pointer<_DfState>);
-typedef _DfProcessC = Int32 Function(Pointer<_DfState>, Pointer<Float>, Pointer<Float>, Int32);
-typedef _DfProcessDart = int Function(Pointer<_DfState>, Pointer<Float>, Pointer<Float>, int);
+typedef _DfProcessC = Int32 Function(
+    Pointer<_DfState>, Pointer<Float>, Pointer<Float>, Int32);
+typedef _DfProcessDart = int Function(
+    Pointer<_DfState>, Pointer<Float>, Pointer<Float>, int);
 
 Pointer<Int8> _strPtr(String s) {
   final plib = DynamicLibrary.process();
-  final malloc = plib.lookup<NativeFunction<Pointer<Void> Function(IntPtr)>>('malloc').asFunction<Pointer<Void> Function(int)>();
+  final malloc = plib
+      .lookup<NativeFunction<Pointer<Void> Function(IntPtr)>>('malloc')
+      .asFunction<Pointer<Void> Function(int)>();
   final ptr = malloc(s.codeUnits.length + 1).cast<Int8>();
   for (int i = 0; i < s.codeUnits.length; i++) ptr[i] = s.codeUnits[i];
   ptr[s.codeUnits.length] = 0;
@@ -25,21 +29,28 @@ Pointer<Int8> _strPtr(String s) {
 
 void _free(Pointer<Int8> p) {
   final plib = DynamicLibrary.process();
-  final free = plib.lookup<NativeFunction<Void Function(Pointer<Void>)>>('free').asFunction<void Function(Pointer<Void>)>();
+  final free = plib
+      .lookup<NativeFunction<Void Function(Pointer<Void>)>>('free')
+      .asFunction<void Function(Pointer<Void>)>();
   free(p.cast<Void>());
 }
 
 void main() {
-  final runnerDir = r'J:\Development\fluttering_ermine\build\windows\x64\runner\Debug';
-  final modelPath = r'J:\Development\deepfilter_livekit\windows\lib\models\DeepFilterNet3_onnx.tar.gz';
+  final runnerDir =
+      r'J:\Development\fluttering_ermine\build\windows\x64\runner\Debug';
+  final modelPath =
+      r'J:\Development\deepfilter_livekit\windows\lib\models\DeepFilterNet3_onnx.tar.gz';
 
   try {
-    final lib = DynamicLibrary.open('$runnerDir\\deepfilter_livekit_plugin.dll');
+    final lib =
+        DynamicLibrary.open('$runnerDir\\deepfilter_livekit_plugin.dll');
     print('[OK] Plugin DLL loaded');
 
     // Try with model path, catch any crash/hang via process-level timeout
     final ptr = _strPtr(modelPath);
-    final dfInit = lib.lookup<NativeFunction<_DfInitC>>('df_init').asFunction<_DfInitDart>();
+    final dfInit = lib
+        .lookup<NativeFunction<_DfInitC>>('df_init')
+        .asFunction<_DfInitDart>();
 
     print('Calling df_init("$modelPath", 48000)...');
     final state = dfInit(ptr, 48000);
@@ -53,19 +64,29 @@ void main() {
     }
 
     // If we get here, init succeeded
-    final isReal = lib.lookup<NativeFunction<_DfIsRealC>>('df_is_real').asFunction<_DfIsRealDart>();
+    final isReal = lib
+        .lookup<NativeFunction<_DfIsRealC>>('df_is_real')
+        .asFunction<_DfIsRealDart>();
     print('df_is_real = ${isReal()}');
     print(isReal() != 0 ? '[OK] Real CAPI loaded!' : '[STUB] Stub in use');
 
-    final dfFrameSize = lib.lookup<NativeFunction<_DfFrameSizeC>>('df_get_frame_size').asFunction<_DfFrameSizeDart>();
+    final dfFrameSize = lib
+        .lookup<NativeFunction<_DfFrameSizeC>>('df_get_frame_size')
+        .asFunction<_DfFrameSizeDart>();
     final frameSize = dfFrameSize(state);
     print('frame_size = $frameSize');
 
     // Try processing a frame
-    final dfProcess = lib.lookup<NativeFunction<_DfProcessC>>('df_process_frame').asFunction<_DfProcessDart>();
+    final dfProcess = lib
+        .lookup<NativeFunction<_DfProcessC>>('df_process_frame')
+        .asFunction<_DfProcessDart>();
     final plib = DynamicLibrary.process();
-    final malloc = plib.lookup<NativeFunction<Pointer<Void> Function(IntPtr)>>('malloc').asFunction<Pointer<Void> Function(int)>();
-    final free = plib.lookup<NativeFunction<Void Function(Pointer<Void>)>>('free').asFunction<void Function(Pointer<Void>)>();
+    final malloc = plib
+        .lookup<NativeFunction<Pointer<Void> Function(IntPtr)>>('malloc')
+        .asFunction<Pointer<Void> Function(int)>();
+    final free = plib
+        .lookup<NativeFunction<Void Function(Pointer<Void>)>>('free')
+        .asFunction<void Function(Pointer<Void>)>();
 
     final input = malloc(frameSize * 4).cast<Float>();
     final output = malloc(frameSize * 4).cast<Float>();
@@ -80,7 +101,9 @@ void main() {
     free(input.cast<Void>());
     free(output.cast<Void>());
 
-    final dfDestroy = lib.lookup<NativeFunction<_DfDestroyC>>('df_destroy').asFunction<_DfDestroyDart>();
+    final dfDestroy = lib
+        .lookup<NativeFunction<_DfDestroyC>>('df_destroy')
+        .asFunction<_DfDestroyDart>();
     dfDestroy(state);
     lib.close();
     print('[OK] All checks passed');

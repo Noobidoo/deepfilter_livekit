@@ -1,7 +1,7 @@
 name: deepfilter_livekit
 version: 0.1.0
 description: Real-time neural noise suppression for LiveKit using DeepFilterNet. Cross-platform with prebuilt binaries.
-repository: https://github.com/your-org/deepfilter_livekit
+repository: https://github.com/Noobidoo/deepfilter_livekit
 environment:
   sdk: ^3.10.0
   flutter: ">=3.27.0"

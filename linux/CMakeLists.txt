@@ -32,8 +32,8 @@ if(EXISTS "${DEEP_FILTER_SO}")
 endif()
 
 # Bundle model files next to the plugin SO
-set(MODELS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/models")
-if(EXISTS "${MODELS_DIR}/config.ini")
+set(MODELS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../assets/models")
+if(EXISTS "${MODELS_DIR}/DeepFilterNet3_onnx.tar.gz")
   add_custom_command(TARGET ${PLUGIN_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
       "${MODELS_DIR}"

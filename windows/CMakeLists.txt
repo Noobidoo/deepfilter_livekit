@@ -56,7 +56,7 @@ if(EXISTS "${DEEP_FILTER_DLL}")
 endif()
 
 # Copy deepfilter.dll (Rust runtime) next to the plugin DLL — capi depends on it
-set(DEEP_FILTER_RUNTIME "${CMAKE_CURRENT_SOURCE_DIR}/lib/lib/windows-x86_64/deepfilter.dll")
+set(DEEP_FILTER_RUNTIME "${CMAKE_CURRENT_SOURCE_DIR}/lib/deepfilter.dll")
 if(EXISTS "${DEEP_FILTER_RUNTIME}")
   add_custom_command(TARGET ${PLUGIN_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different

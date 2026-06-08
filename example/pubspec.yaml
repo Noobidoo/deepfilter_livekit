@@ -1,0 +1,16 @@
+name: deepfilter_livekit_example
+description: Example app for deepfilter_livekit plugin.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  deepfilter_livekit:
+    path: ..
+
+flutter:
+  uses-material-design: true

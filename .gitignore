@@ -1,0 +1,51 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub/
+build/
+*.iml
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Android (example/android)
+/android/.gradle/
+/android/app/build/
+/android/local.properties
+/android/key.properties
+/android/.idea/
+
+# iOS (example/ios)
+/ios/Pods/
+/ios/.symlinks/
+/ios/Flutter/Flutter.framework
+/ios/Flutter/Flutter.podspec
+/ios/Podfile.lock
+
+# macOS (example/macos)
+/macos/Pods/
+/macos/.symlinks/
+/macos/Podfile.lock
+
+# Windows (example/windows)
+/windows/Flutter/ephemeral/
+/windows/Flutter/generated_*
+/windows/Flutter/cpp_client_wrapper_*
+/windows/flutter_ephemeral_*
+/windows/x64/
+/windows/Release/
+
+# Linux (example/linux)
+/linux/Flutter/ephemeral/
+/linux/flutter_ephemeral_*
+/linux/build/
+/linux/Release/
+
+# Libraries should not commit pubspec.lock
+pubspec.lock
+
+# OS files
+.DS_Store
+Thumbs.db

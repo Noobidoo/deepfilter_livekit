@@ -40,8 +40,8 @@ target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 add_dependencies(${BINARY_NAME} flutter_assemble)
 
 # Copy DeepFilterNet model files next to the executable so the adapter can find them.
-set(PLUGIN_MODELS_DIR "${FLUTTER_MANAGED_DIR}/ephemeral/.plugin_symlinks/deepfilter_livekit/windows/lib/models")
-if(EXISTS "${PLUGIN_MODELS_DIR}/config.ini")
+set(PLUGIN_MODELS_DIR "${FLUTTER_MANAGED_DIR}/ephemeral/.plugin_symlinks/deepfilter_livekit/assets/models")
+if(EXISTS "${PLUGIN_MODELS_DIR}/DeepFilterNet3_onnx.tar.gz")
   add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
       "${PLUGIN_MODELS_DIR}"

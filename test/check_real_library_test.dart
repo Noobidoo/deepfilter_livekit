@@ -17,9 +17,11 @@ void main() {
             .asFunction<int Function()>();
         final real = fn() != 0;
         print('df_is_real() = ${fn()}');
-        print(real
-            ? 'SUCCESS: Real CAPI library loaded'
-            : 'WARNING: Pass-through stub in use');
+        print(
+          real
+              ? 'SUCCESS: Real CAPI library loaded'
+              : 'WARNING: Pass-through stub in use',
+        );
         lib.close();
       } catch (e) {
         print('Direct FFI check: $e');

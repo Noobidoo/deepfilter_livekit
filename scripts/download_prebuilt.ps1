@@ -26,10 +26,16 @@ Download-File "$BaseUrl/libdeep_filter_lib.so" "$linuxDir\libdeep_filter_lib.so"
 $macDir = Join-Path $OutDir "macos\lib"
 Download-File "$BaseUrl/libdeep_filter_lib.dylib" "$macDir\libdeep_filter_lib.dylib"
 
-# Android — not yet built in CI (add when CI adds android targets)
-# $androidDir = Join-Path $OutDir "android\src\main\jniLibs"
-# Download-File "$BaseUrl/libdeep_filter_lib-arm64-android.so" "$androidDir\arm64-v8a\libdeep_filter_lib.so"
+# Android arm64-v8a (best-effort — may not exist in release yet)
+$androidDir = Join-Path $OutDir "android\src\main\jniLibs\arm64-v8a"
+try {
+    Download-File "$BaseUrl/libdeep_filter_lib-arm64-android.so" "$androidDir\libdeep_filter_lib.so"
+} catch { Write-Warning "Android lib not available: $_" }
 
-# iOS — not yet built in CI
+# iOS (best-effort — may not exist in release yet)
+$iosDir = Join-Path $OutDir "ios\Frameworks"
+try {
+    Download-File "$BaseUrl/libdeep_filter_lib-ios.a" "$iosDir\libdeep_filter_lib.a"
+} catch { Write-Warning "iOS lib not available: $_" }
 
 Write-Host "Prebuilt libraries downloaded successfully."

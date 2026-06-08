@@ -22,9 +22,16 @@ download "$BASE_URL/libdeep_filter_lib.so" "$OUT_DIR/linux/lib/libdeep_filter_li
 # macOS
 download "$BASE_URL/libdeep_filter_lib.dylib" "$OUT_DIR/macos/lib/libdeep_filter_lib.dylib"
 
-# Android — not yet built in CI
-# download "$BASE_URL/libdeep_filter_lib-arm64-android.so" "$OUT_DIR/android/src/main/jniLibs/arm64-v8a/libdeep_filter_lib.so"
+# Android arm64-v8a (best-effort — may not exist in release yet)
+mkdir -p "$OUT_DIR/android/src/main/jniLibs/arm64-v8a"
+curl -fsSL "$BASE_URL/libdeep_filter_lib-arm64-android.so" \
+  -o "$OUT_DIR/android/src/main/jniLibs/arm64-v8a/libdeep_filter_lib.so" || \
+  echo "Android lib not available yet"
 
-# iOS — not yet built in CI
+# iOS (best-effort — may not exist in release yet)
+mkdir -p "$OUT_DIR/ios/Frameworks"
+curl -fsSL "$BASE_URL/libdeep_filter_lib-ios.a" \
+  -o "$OUT_DIR/ios/Frameworks/libdeep_filter_lib.a" || \
+  echo "iOS lib not available yet"
 
 echo "Prebuilt libraries downloaded successfully."

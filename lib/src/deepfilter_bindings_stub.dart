@@ -22,7 +22,9 @@ abstract final class DeepFilterNative {
 
   static int processFrame(Float32List input, Float32List output) {
     if (!_initialized) {
-      throw DeepFilterException('DeepFilter not initialized. Call init() first.');
+      throw DeepFilterException(
+        'DeepFilter not initialized. Call init() first.',
+      );
     }
     return 0;
   }
@@ -32,7 +34,9 @@ abstract final class DeepFilterNative {
     Float32List output,
   ) async {
     if (!_initialized) {
-      throw DeepFilterException('DeepFilter not initialized. Call init() first.');
+      throw DeepFilterException(
+        'DeepFilter not initialized. Call init() first.',
+      );
     }
     return 0;
   }

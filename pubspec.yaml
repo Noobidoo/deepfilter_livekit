@@ -22,7 +22,7 @@ flutter:
         pluginClass: DeepFilterPlugin
       web:
         pluginClass: DeepFilterPluginWeb
-        fileName: deepfilter_livekit_web
+        fileName: deepfilter_livekit_web.dart
 
   assets:
     - assets/models/

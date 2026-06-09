@@ -12,7 +12,7 @@ target_include_directories(${PLUGIN_NAME} PUBLIC
   "include"
 )
 
-target_link_libraries(${PLUGIN_NAME} PRIVATE flutter_linux)
+target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
 
 set_target_properties(${PLUGIN_NAME} PROPERTIES
   CXX_VISIBILITY_PRESET hidden

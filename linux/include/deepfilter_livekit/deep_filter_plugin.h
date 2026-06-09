@@ -14,7 +14,7 @@ class DeepFilterPlugin {
 
  private:
   static void HandleMethodCall(
-      FlPluginRegistrar* registrar,
+      FlMethodChannel* channel,
       FlMethodCall* method_call,
       gpointer user_data);
 
@@ -22,5 +22,8 @@ class DeepFilterPlugin {
 };
 
 }  // namespace deepfilter_livekit
+
+G_MODULE_EXPORT extern "C" void deep_filter_plugin_register_with_registrar(
+    FlPluginRegistrar* registrar);
 
 #endif

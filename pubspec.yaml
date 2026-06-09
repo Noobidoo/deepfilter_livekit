@@ -30,6 +30,8 @@ flutter:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
   flutter_webrtc: ^1.4.0
   livekit_client: ^2.7.0
   ffi: ^2.1.0

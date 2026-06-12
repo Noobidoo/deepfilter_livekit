@@ -17,6 +17,7 @@ build/
 /android/key.properties
 /android/.idea/
 /android/.cxx/
+/android/src/main/jniLibs/**/libdeep_filter_jni*
 
 # iOS (example/ios)
 /ios/Pods/

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-VERSION="${1:-v0.5.7-capi.1}"
+VERSION="${1:-v0.5.7-capi.3}"
 REPO="${2:-https://github.com/Noobidoo/DeepFilterNet}"
 BASE_URL="$REPO/releases/download/$VERSION"
 OUT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -22,11 +22,23 @@ download "$BASE_URL/libdeep_filter_lib.so" "$OUT_DIR/linux/lib/libdeep_filter_li
 # macOS
 download "$BASE_URL/libdeep_filter_lib.dylib" "$OUT_DIR/macos/lib/libdeep_filter_lib.dylib"
 
-# Android arm64-v8a (best-effort — may not exist in release yet)
+# Android arm64-v8a
 mkdir -p "$OUT_DIR/android/src/main/jniLibs/arm64-v8a"
 curl -fsSL "$BASE_URL/libdeep_filter_lib-arm64-android.so" \
   -o "$OUT_DIR/android/src/main/jniLibs/arm64-v8a/libdeep_filter_lib.so" || \
-  echo "Android lib not available yet"
+  echo "Android arm64-v8a lib not available"
+
+# Android armeabi-v7a
+mkdir -p "$OUT_DIR/android/src/main/jniLibs/armeabi-v7a"
+curl -fsSL "$BASE_URL/libdeep_filter_lib-arm-android.so" \
+  -o "$OUT_DIR/android/src/main/jniLibs/armeabi-v7a/libdeep_filter_lib.so" || \
+  echo "Android armeabi-v7a lib not available"
+
+# Android x86_64
+mkdir -p "$OUT_DIR/android/src/main/jniLibs/x86_64"
+curl -fsSL "$BASE_URL/libdeep_filter_lib-x86_64-android.so" \
+  -o "$OUT_DIR/android/src/main/jniLibs/x86_64/libdeep_filter_lib.so" || \
+  echo "Android x86_64 lib not available"
 
 # iOS (best-effort — may not exist in release yet)
 mkdir -p "$OUT_DIR/ios/Frameworks"

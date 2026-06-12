@@ -1,5 +1,5 @@
 param(
-    [string]$Version = "v0.5.7-capi.1",
+    [string]$Version = "v0.5.7-capi.3",
     [string]$Repo = "https://github.com/Noobidoo/DeepFilterNet"
 )
 
@@ -26,11 +26,23 @@ Download-File "$BaseUrl/libdeep_filter_lib.so" "$linuxDir\libdeep_filter_lib.so"
 $macDir = Join-Path $OutDir "macos\lib"
 Download-File "$BaseUrl/libdeep_filter_lib.dylib" "$macDir\libdeep_filter_lib.dylib"
 
-# Android arm64-v8a (best-effort — may not exist in release yet)
+# Android arm64-v8a
 $androidDir = Join-Path $OutDir "android\src\main\jniLibs\arm64-v8a"
 try {
     Download-File "$BaseUrl/libdeep_filter_lib-arm64-android.so" "$androidDir\libdeep_filter_lib.so"
-} catch { Write-Warning "Android lib not available: $_" }
+} catch { Write-Warning "Android arm64-v8a lib not available: $_" }
+
+# Android armeabi-v7a
+$androidDir = Join-Path $OutDir "android\src\main\jniLibs\armeabi-v7a"
+try {
+    Download-File "$BaseUrl/libdeep_filter_lib-arm-android.so" "$androidDir\libdeep_filter_lib.so"
+} catch { Write-Warning "Android armeabi-v7a lib not available: $_" }
+
+# Android x86_64
+$androidDir = Join-Path $OutDir "android\src\main\jniLibs\x86_64"
+try {
+    Download-File "$BaseUrl/libdeep_filter_lib-x86_64-android.so" "$androidDir\libdeep_filter_lib.so"
+} catch { Write-Warning "Android x86_64 lib not available: $_" }
 
 # iOS (best-effort — may not exist in release yet)
 $iosDir = Join-Path $OutDir "ios\Frameworks"

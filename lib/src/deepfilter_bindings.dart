@@ -49,7 +49,6 @@ abstract final class DeepFilterNative {
   static int _frameSize = 0;
   static int _sampleRate = 48000;
   static bool _initialized = false;
-
   static String get _libName {
     if (Platform.isWindows) return 'deep_filter_lib.dll';
     if (Platform.isLinux) return 'libdeep_filter_lib.so';
@@ -161,6 +160,8 @@ abstract final class DeepFilterNative {
     const MethodChannel('io.deepfilter.livekit').invokeMethod<String>('init', {
       'modelPath': modelPath ?? '',
       'sampleRate': sampleRate,
+    }).catchError((Object e) {
+      debugPrint('[df:bindings] _initChannel error: $e');
     });
     _sampleRate = sampleRate;
     _initialized = true;
@@ -302,8 +303,21 @@ abstract final class DeepFilterNative {
   ///
   /// When disabled, audio passes through the APM unmodified.
   /// Only has effect on desktop platforms where the APM hook is available.
-  static void setApmEnabled(bool enabled) {
-    if (Platform.isAndroid || Platform.isIOS) return;
+  static Future<void> setApmEnabled(bool enabled) async {
+    if (Platform.isAndroid) {
+      try {
+        await const MethodChannel('io.deepfilter.livekit').invokeMethod<void>(
+          'setApmEnabled',
+          {'enabled': enabled},
+        );
+        _apmApmAttachedResult = enabled;
+        debugPrint('[df:bindings] setApmEnabled($enabled) via method channel');
+      } catch (e) {
+        debugPrint('[df:bindings] setApmEnabled failed on Android: $e');
+      }
+      return;
+    }
+    if (Platform.isIOS) return;
     try {
       final lib = _load();
       lib
@@ -315,9 +329,28 @@ abstract final class DeepFilterNative {
     }
   }
 
+  /// Attach the WebRTC APM capture post-processing hook on Android.
+  /// Call after flutter_webrtc has been initialized (after creating
+  /// a peer connection / joining a room).
+  static Future<void> attachApmHook() async {
+    if (!Platform.isAndroid) return;
+    try {
+      const channel = MethodChannel('io.deepfilter.livekit');
+      _apmApmAttachedResult =
+          await channel.invokeMethod<bool>('attachApmHook') ?? false;
+      debugPrint('[df:bindings] attachApmHook: $_apmApmAttachedResult');
+    } catch (e) {
+      debugPrint('[df:bindings] attachApmHook failed: $e');
+    }
+  }
+
   /// Whether the WebRTC APM capture post-processing hook is attached.
   static bool get isApmAttached {
-    if (Platform.isAndroid || Platform.isIOS) return false;
+    if (Platform.isAndroid) {
+      // Query from Kotlin plugin's APM hook state
+      return _apmApmAttachedResult;
+    }
+    if (Platform.isIOS) return false;
     try {
       final lib = _load();
       return lib
@@ -328,6 +361,8 @@ abstract final class DeepFilterNative {
       return false;
     }
   }
+
+  static bool _apmApmAttachedResult = false;
 
   static bool get isRealLibrary {
     if (Platform.isAndroid || Platform.isIOS) return true;

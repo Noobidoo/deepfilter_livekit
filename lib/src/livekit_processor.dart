@@ -20,6 +20,9 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
   /// from the build output. Run `scripts/download_prebuilt.ps1` and rebuild.
   static bool get isRealLibrary => DeepFilterNative.isRealLibrary;
 
+  /// Attach the WebRTC APM capture hook on Android.
+  static Future<void> attachApmHook() => DeepFilterNative.attachApmHook();
+
   /// Whether the WebRTC APM capture hook is attached and processing is active.
   static bool get isApmAttached => DeepFilterNative.isApmAttached;
 
@@ -74,7 +77,7 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
   void setEnabled(bool value) {
     _enabled = value;
     _processing = _enabled && _published;
-    DeepFilterNative.setApmEnabled(value);
+    unawaited(DeepFilterNative.setApmEnabled(value));
   }
 
   @override
@@ -93,21 +96,21 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
   Future<void> destroy() async {
     _processing = false;
     _published = false;
-    DeepFilterNative.setApmEnabled(false);
+    await DeepFilterNative.setApmEnabled(false);
   }
 
   @override
   Future<void> onPublish(Room room) async {
     _published = true;
     _processing = _enabled;
-    DeepFilterNative.setApmEnabled(_enabled);
+    await DeepFilterNative.setApmEnabled(_enabled);
   }
 
   @override
   Future<void> onUnpublish() async {
     _processing = false;
     _published = false;
-    DeepFilterNative.setApmEnabled(false);
+    await DeepFilterNative.setApmEnabled(false);
   }
 
   /// Process a raw PCM frame synchronously (desktop FFI only).

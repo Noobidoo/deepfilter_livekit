@@ -16,6 +16,7 @@ build/
 /android/local.properties
 /android/key.properties
 /android/.idea/
+/android/.cxx/
 
 # iOS (example/ios)
 /ios/Pods/

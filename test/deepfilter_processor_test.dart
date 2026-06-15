@@ -10,15 +10,15 @@ void main() {
 
   group('LiveKitDeepFilter lifecycle', () {
     test('multiple enable/disable cycles', () async {
-      final lk = LiveKitDeepFilter(modelPath: null, sampleRate: 48000);
-      expect(lk.isEnabled, true);
+      final lk = LiveKitDeepFilter();
+      expect(lk.isEnabled, false);
 
       for (int i = 0; i < 3; i++) {
+        await lk.enable(modelPath: null, sampleRate: 48000);
+        expect(lk.isEnabled, true);
+
         await lk.disable();
         expect(lk.isEnabled, false);
-
-        await lk.enable();
-        expect(lk.isEnabled, true);
       }
 
       lk.dispose();
@@ -26,6 +26,8 @@ void main() {
 
     test('enable is no-op when already enabled', () async {
       final lk = LiveKitDeepFilter();
+      expect(lk.isEnabled, false);
+      await lk.enable();
       expect(lk.isEnabled, true);
       await lk.enable();
       expect(lk.isEnabled, true);
@@ -44,6 +46,7 @@ void main() {
       'dispose only schedules async disable, isEnabled remains true',
       () async {
         final lk = LiveKitDeepFilter();
+        await lk.enable();
         lk.dispose();
         expect(lk.isEnabled, true);
       },
@@ -51,6 +54,8 @@ void main() {
 
     test('processor is null after disable', () async {
       final lk = LiveKitDeepFilter();
+      expect(lk.processor, isNull);
+      await lk.enable();
       expect(lk.processor, isNotNull);
       await lk.disable();
       expect(lk.processor, isNull);
@@ -59,6 +64,7 @@ void main() {
 
     test('processor is reassigned after re-enable', () async {
       final lk = LiveKitDeepFilter();
+      await lk.enable();
       final p1 = lk.processor;
       await lk.disable();
       await lk.enable();

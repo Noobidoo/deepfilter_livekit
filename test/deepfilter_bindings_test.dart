@@ -44,8 +44,11 @@ void main() {
   });
 
   group('LiveKitDeepFilter', () {
-    test('can be created with defaults', () {
+    test('can be created with defaults', () async {
       final lk = LiveKitDeepFilter();
+      expect(lk.isEnabled, false);
+      expect(lk.processor, isNull);
+      await lk.enable();
       expect(lk.isEnabled, true);
       expect(lk.processor, isNotNull);
       lk.dispose();
@@ -53,6 +56,8 @@ void main() {
 
     test('disable and enable lifecycle', () async {
       final lk = LiveKitDeepFilter();
+      expect(lk.isEnabled, false);
+      await lk.enable();
       expect(lk.isEnabled, true);
       await lk.disable();
       expect(lk.isEnabled, false);

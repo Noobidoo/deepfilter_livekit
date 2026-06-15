@@ -82,6 +82,9 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
 
   @override
   Future<void> init(AudioProcessorOptions options) async {
+    if (defaultTargetPlatform == TargetPlatform.android && isSupported) {
+      await attachApmHook();
+    }
     _frameSize = _frameSize > 0 ? _frameSize : DeepFilterNative.frameSize;
     if (_frameSize <= 0) _frameSize = 480;
   }
@@ -128,29 +131,35 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
 class LiveKitDeepFilter {
   DeepFilterProcessor? _processor;
 
-  LiveKitDeepFilter({String? modelPath, int sampleRate = 48000}) {
-    if (DeepFilterNative.isAvailable) {
-      DeepFilterNative.init(modelPath: modelPath, sampleRate: sampleRate);
-    }
-    _processor = DeepFilterProcessor(
-      modelPath: modelPath,
-      sampleRate: sampleRate,
-      autoInit: false,
-    );
-  }
+  /// Whether the native DeepFilterNet library is available on this platform.
+  static bool get isSupported => DeepFilterProcessor.isSupported;
 
+  /// Whether the real capi library was loaded (vs the pass-through stub).
+  static bool get isRealLibrary => DeepFilterProcessor.isRealLibrary;
+
+  /// Whether the processor is actively denoising.
+  bool get isProcessing => _processor?.isProcessing ?? false;
+
+  /// Whether a processor instance exists.
+  bool get isEnabled => _processor != null;
+
+  /// The underlying processor, or `null`. Pass to [AudioCaptureOptions.processor]
+  /// when enabling the microphone for automatic lifecycle management.
   DeepFilterProcessor? get processor => _processor;
 
-  Future<void> attach(LocalAudioTrack track) async {
-    if (_processor == null) return;
-    await track.setProcessor(_processor);
-  }
+  LiveKitDeepFilter();
 
-  Future<void> detach(LocalAudioTrack track) async {
-    await track.setProcessor(null);
-  }
-
-  Future<void> enable({String? modelPath, int sampleRate = 48000}) async {
+  /// Create a processor. No-op if one already exists.
+  ///
+  /// Call before [Room] connection so the processor can be passed via
+  /// [AudioCaptureOptions.processor]. This lets the LiveKit SDK handle
+  /// [TrackProcessor.init], [TrackProcessor.onPublish], and
+  /// [TrackProcessor.destroy] automatically.
+  Future<void> enable({
+    String? modelPath,
+    int sampleRate = 48000,
+    bool enabled = true,
+  }) async {
     if (_processor != null) return;
     if (DeepFilterNative.isAvailable) {
       DeepFilterNative.init(modelPath: modelPath, sampleRate: sampleRate);
@@ -159,20 +168,40 @@ class LiveKitDeepFilter {
       modelPath: modelPath,
       sampleRate: sampleRate,
       autoInit: false,
+      enabled: enabled,
     );
   }
 
+  /// Destroy the processor. Call when leaving a voice channel.
   Future<void> disable() async {
     await _processor?.destroy();
     DeepFilterNative.dispose();
     _processor = null;
   }
 
+  /// Toggle noise suppression at runtime.
+  void setEnabled(bool value) {
+    _processor?.setEnabled(value);
+  }
+
+  /// Attach the processor to an already-published local audio track.
+  ///
+  /// Used when enabling DeepFilter mid-call after joining without a processor.
+  /// If the processor was passed via [AudioCaptureOptions.processer] at join
+  /// time, the SDK manages the lifecycle and this is not needed.
+  Future<void> attachToTrack(LocalAudioTrack track) async {
+    if (_processor == null) return;
+    await track.setProcessor(_processor!);
+  }
+
+  /// Detach the processor from a local audio track.
+  Future<void> detachFromTrack(LocalAudioTrack track) async {
+    await track.setProcessor(null);
+  }
+
   void dispose() {
     unawaited(disable());
   }
-
-  bool get isEnabled => _processor != null;
 }
 
 final class DeepFilterMethodChannel {

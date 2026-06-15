@@ -58,32 +58,36 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
 class LiveKitDeepFilter {
   DeepFilterProcessor? _processor;
 
-  LiveKitDeepFilter({String? modelPath, int sampleRate = 48000}) {
-    _processor = DeepFilterProcessor(
-      modelPath: modelPath,
-      sampleRate: sampleRate,
-      autoInit: false,
-    );
-  }
+  LiveKitDeepFilter();
+
+  static bool get isSupported => false;
+  static bool get isRealLibrary => false;
+
+  bool get isProcessing => false;
+  bool get isEnabled => _processor != null;
 
   DeepFilterProcessor? get processor => _processor;
 
-  Future<void> attach(LocalAudioTrack track) async {}
-
-  Future<void> detach(LocalAudioTrack track) async {}
-
-  Future<void> enable({String? modelPath, int sampleRate = 48000}) async {}
+  Future<void> enable({
+    String? modelPath,
+    int sampleRate = 48000,
+    bool enabled = true,
+  }) async {}
 
   Future<void> disable() async {
     await _processor?.destroy();
     _processor = null;
   }
 
+  void setEnabled(bool value) {}
+
+  Future<void> attachToTrack(LocalAudioTrack track) async {}
+
+  Future<void> detachFromTrack(LocalAudioTrack track) async {}
+
   void dispose() {
     unawaited(disable());
   }
-
-  bool get isEnabled => _processor != null;
 }
 
 final class DeepFilterMethodChannel {

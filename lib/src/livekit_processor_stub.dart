@@ -10,6 +10,7 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
 
   static bool get isSupported => false;
   static bool get isRealLibrary => false;
+  static Future<void> attachApmHook() async {}
   static bool get isApmAttached => false;
 
   @override
@@ -83,4 +84,8 @@ class LiveKitDeepFilter {
   }
 
   bool get isEnabled => _processor != null;
+}
+
+final class DeepFilterMethodChannel {
+  static Future<bool> get isAvailable async => false;
 }

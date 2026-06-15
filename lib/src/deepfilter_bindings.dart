@@ -157,12 +157,15 @@ abstract final class DeepFilterNative {
   }
 
   static void _initChannel(String? modelPath, int sampleRate) {
-    const MethodChannel('io.deepfilter.livekit').invokeMethod<String>('init', {
-      'modelPath': modelPath ?? '',
-      'sampleRate': sampleRate,
-    }).catchError((Object e) {
-      debugPrint('[df:bindings] _initChannel error: $e');
-    });
+    const MethodChannel('io.deepfilter.livekit')
+        .invokeMethod<String>('init', {
+          'modelPath': modelPath ?? '',
+          'sampleRate': sampleRate,
+        })
+        .catchError((Object e) {
+          debugPrint('[df:bindings] _initChannel error: $e');
+          return null;
+        });
     _sampleRate = sampleRate;
     _initialized = true;
   }
@@ -306,10 +309,9 @@ abstract final class DeepFilterNative {
   static Future<void> setApmEnabled(bool enabled) async {
     if (Platform.isAndroid) {
       try {
-        await const MethodChannel('io.deepfilter.livekit').invokeMethod<void>(
-          'setApmEnabled',
-          {'enabled': enabled},
-        );
+        await const MethodChannel(
+          'io.deepfilter.livekit',
+        ).invokeMethod<void>('setApmEnabled', {'enabled': enabled});
         _apmApmAttachedResult = enabled;
         debugPrint('[df:bindings] setApmEnabled($enabled) via method channel');
       } catch (e) {

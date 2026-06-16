@@ -133,12 +133,12 @@ void main() {
     );
 
     test(
-      'setEnabled(true) does not start processing when not published',
+      'setEnabled(true) starts processing regardless of publish state',
       () async {
         final processor = DeepFilterProcessor(autoInit: false, enabled: false);
         processor.setEnabled(true);
         expect(processor.enabled, true);
-        expect(processor.isProcessing, false);
+        expect(processor.isProcessing, true);
       },
     );
 
@@ -156,7 +156,7 @@ void main() {
       await processor.destroy();
     });
 
-    test('destroy resets isProcessing and published state', () async {
+    test('destroy resets isProcessing; setEnabled restores it', () async {
       final processor = DeepFilterProcessor(autoInit: false);
       await processor.onPublish(Room());
       expect(processor.isProcessing, true);
@@ -168,8 +168,8 @@ void main() {
       processor.setEnabled(true);
       expect(
         processor.isProcessing,
-        false,
-        reason: 'was unpublished by destroy',
+        true,
+        reason: 'setEnabled directly controls processing state',
       );
     });
 

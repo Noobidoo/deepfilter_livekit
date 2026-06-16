@@ -33,14 +33,18 @@ class _ChatState extends State<_Chat> {
   bool _muted = false;
   bool _nsOn = true;
 
-  @override void dispose() {
+  @override
+  void dispose() {
     _disconnect();
     for (final c in [_urlCtl, _roomCtl, _idCtl, _keyCtl, _secCtl]) c.dispose();
     super.dispose();
   }
 
   Future<void> _connect() async {
-    setState(() { _err = ''; _remote = ''; });
+    setState(() {
+      _err = '';
+      _remote = '';
+    });
     try {
       final token = JWT({
         'iss': _keyCtl.text,
@@ -78,10 +82,7 @@ class _ChatState extends State<_Chat> {
 
       _processor = DeepFilterProcessor(enabled: _nsOn);
       final track = await lk.LocalAudioTrack.create(
-        lk.AudioCaptureOptions(
-          deviceId: micId,
-          processor: _processor,
-        ),
+        lk.AudioCaptureOptions(deviceId: micId, processor: _processor),
       );
       await _room!.localParticipant!.publishAudioTrack(track);
 
@@ -116,64 +117,93 @@ class _ChatState extends State<_Chat> {
     final connected = _room?.connectionState == lk.ConnectionState.connected;
     return Scaffold(
       appBar: AppBar(title: const Text('Voice Chat Test')),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
-        ..._fields(),
-        const SizedBox(height: 12),
-        ElevatedButton(
-          onPressed: connected ? _disconnect : _connect,
-          child: Text(connected ? 'Disconnect' : 'Connect'),
-        ),
-        const SizedBox(height: 12),
-        if (connected) ...[
-          Row(children: [
-            Icon(ok ? Icons.check_circle : Icons.error,
-                color: ok ? Colors.green : Colors.red),
-            const SizedBox(width: 6),
-            Text(ok ? 'Real Library' : 'STUB (no noise reduction)',
-                style: TextStyle(fontWeight: FontWeight.bold,
-                    color: ok ? Colors.green : Colors.red)),
-            const Spacer(),
-            Text('NS: ${_nsOn ? "ON" : "OFF"}',
-                style: TextStyle(fontWeight: FontWeight.bold,
-                    color: _nsOn ? Colors.green : Colors.grey)),
-          ]),
-          const SizedBox(height: 4),
-          Builder(builder: (_) {
-            final apm = DeepFilterProcessor.isApmAttached;
-            return Row(children: [
-              Icon(apm ? Icons.graphic_eq : Icons.mic_off,
-                  size: 16,
-                  color: apm ? Colors.green : Colors.orange),
-              const SizedBox(width: 4),
-              Text(apm ? 'APM hook active' : 'APM hook not attached',
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: apm ? Colors.green : Colors.orange)),
-            ]);
-          }),
-          const SizedBox(height: 8),
-          Text('Room: ${_room!.name ?? "-"}'),
-          Text('Remote: ${_remote.isEmpty ? "none" : _remote}'),
-          Text('Status: ${_room!.connectionState.name}'),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          ..._fields(),
           const SizedBox(height: 12),
-          Row(children: [
-            ElevatedButton(
-                onPressed: _toggleMic,
-                child: Text(_muted ? 'Unmute' : 'Mute')),
-            const SizedBox(width: 12),
-            ElevatedButton(
-                onPressed: _toggleNs,
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: _nsOn ? Colors.green : Colors.grey),
-                child: Text('NS ${_nsOn ? "ON" : "OFF"}')),
-          ]),
-        ],
-        if (_err.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: Text(_err, style: const TextStyle(color: Colors.red)),
+          ElevatedButton(
+            onPressed: connected ? _disconnect : _connect,
+            child: Text(connected ? 'Disconnect' : 'Connect'),
           ),
-      ]),
+          const SizedBox(height: 12),
+          if (connected) ...[
+            Row(
+              children: [
+                Icon(
+                  ok ? Icons.check_circle : Icons.error,
+                  color: ok ? Colors.green : Colors.red,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  ok ? 'Real Library' : 'STUB (no noise reduction)',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: ok ? Colors.green : Colors.red,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  'NS: ${_nsOn ? "ON" : "OFF"}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: _nsOn ? Colors.green : Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Builder(
+              builder: (_) {
+                final apm = DeepFilterProcessor.isApmAttached;
+                return Row(
+                  children: [
+                    Icon(
+                      apm ? Icons.graphic_eq : Icons.mic_off,
+                      size: 16,
+                      color: apm ? Colors.green : Colors.orange,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      apm ? 'APM hook active' : 'APM hook not attached',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: apm ? Colors.green : Colors.orange,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+            Text('Room: ${_room!.name ?? "-"}'),
+            Text('Remote: ${_remote.isEmpty ? "none" : _remote}'),
+            Text('Status: ${_room!.connectionState.name}'),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: _toggleMic,
+                  child: Text(_muted ? 'Unmute' : 'Mute'),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: _toggleNs,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _nsOn ? Colors.green : Colors.grey,
+                  ),
+                  child: Text('NS ${_nsOn ? "ON" : "OFF"}'),
+                ),
+              ],
+            ),
+          ],
+          if (_err.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Text(_err, style: const TextStyle(color: Colors.red)),
+            ),
+        ],
+      ),
     );
   }
 
@@ -185,14 +215,23 @@ class _ChatState extends State<_Chat> {
     _field(_secCtl, 'API Secret', obscure: true),
   ];
 
-  Widget _field(TextEditingController c, String label, {bool obscure = false}) =>
-    Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: TextField(controller: c,
-        decoration: InputDecoration(
-          labelText: label, border: const OutlineInputBorder(),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+  Widget _field(
+    TextEditingController c,
+    String label, {
+    bool obscure = false,
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: TextField(
+      controller: c,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
         ),
-        obscureText: obscure),
-    );
+      ),
+      obscureText: obscure,
+    ),
+  );
 }

@@ -36,12 +36,8 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
   MediaStreamTrack? get processedTrack => null;
 
   int _frameSize = 0;
-  bool _published = false;
 
   /// Whether the processor is actively denoising.
-  ///
-  /// `true` only when the track is published (after [onPublish]) AND
-  /// [enabled] is `true`. Toggle [enabled] at any time with [setEnabled].
   bool get isProcessing => _processing;
   bool _processing = false;
 
@@ -76,7 +72,7 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
   /// needed — the same [DeepFilterProcessor] remains attached.
   void setEnabled(bool value) {
     _enabled = value;
-    _processing = _enabled && _published;
+    _processing = value;
     unawaited(DeepFilterNative.setApmEnabled(value));
   }
 
@@ -98,13 +94,11 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
   @override
   Future<void> destroy() async {
     _processing = false;
-    _published = false;
     await DeepFilterNative.setApmEnabled(false);
   }
 
   @override
   Future<void> onPublish(Room room) async {
-    _published = true;
     _processing = _enabled;
     await DeepFilterNative.setApmEnabled(_enabled);
   }
@@ -112,7 +106,6 @@ class DeepFilterProcessor implements TrackProcessor<AudioProcessorOptions> {
   @override
   Future<void> onUnpublish() async {
     _processing = false;
-    _published = false;
     await DeepFilterNative.setApmEnabled(false);
   }
 

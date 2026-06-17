@@ -18,24 +18,16 @@ target_include_directories(${PLUGIN_NAME} PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
-# Include flutter_webrtc libwebrtc headers for the APM hook
-set(FLUTTER_WEBRTC_LIBWEBRTC_INCLUDE
-  "${CMAKE_CURRENT_SOURCE_DIR}/../example/windows/flutter/ephemeral/.plugin_symlinks/flutter_webrtc/third_party/libwebrtc/include"
-)
-if(EXISTS "${FLUTTER_WEBRTC_LIBWEBRTC_INCLUDE}")
-  target_include_directories(${PLUGIN_NAME} PRIVATE "${FLUTTER_WEBRTC_LIBWEBRTC_INCLUDE}")
-  set(FLUTTER_WEBRTC_CPP_INCLUDE
-    "${CMAKE_CURRENT_SOURCE_DIR}/../example/windows/flutter/ephemeral/.plugin_symlinks/flutter_webrtc/common/cpp/include"
+# Include flutter_webrtc headers for the APM hook.
+# CMAKE_SOURCE_DIR always points to the app's windows/ directory,
+# so we can reach the .plugin_symlinks regardless of plugin context.
+set(FW_SYMLINKS "${CMAKE_SOURCE_DIR}/flutter/ephemeral/.plugin_symlinks/flutter_webrtc")
+if(EXISTS "${FW_SYMLINKS}")
+  target_include_directories(${PLUGIN_NAME} PRIVATE
+    "${FW_SYMLINKS}/windows"
+    "${FW_SYMLINKS}/common/cpp/include"
+    "${FW_SYMLINKS}/third_party/libwebrtc/include"
   )
-  if(EXISTS "${FLUTTER_WEBRTC_CPP_INCLUDE}")
-    target_include_directories(${PLUGIN_NAME} PRIVATE "${FLUTTER_WEBRTC_CPP_INCLUDE}")
-  endif()
-  set(FLUTTER_WEBRTC_WINDOWS_INCLUDE
-    "${CMAKE_CURRENT_SOURCE_DIR}/../example/windows/flutter/ephemeral/.plugin_symlinks/flutter_webrtc/windows"
-  )
-  if(EXISTS "${FLUTTER_WEBRTC_WINDOWS_INCLUDE}")
-    target_include_directories(${PLUGIN_NAME} PRIVATE "${FLUTTER_WEBRTC_WINDOWS_INCLUDE}")
-  endif()
   target_compile_definitions(${PLUGIN_NAME} PRIVATE DF_APM_HOOK_AVAILABLE LIB_WEBRTC_API_DLL)
 endif()
 target_link_libraries(${PLUGIN_NAME} PRIVATE

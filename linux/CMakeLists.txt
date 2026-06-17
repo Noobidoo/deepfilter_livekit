@@ -14,6 +14,20 @@ target_include_directories(${PLUGIN_NAME} PUBLIC
 
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
 
+# FlutterWebRTC include paths for APM hook.
+# CMAKE_SOURCE_DIR always points to the app's linux/ directory,
+# so we can reach the .plugin_symlinks regardless of plugin context.
+set(FW_SYMLINKS "${CMAKE_SOURCE_DIR}/flutter/ephemeral/.plugin_symlinks/flutter_webrtc")
+if(EXISTS "${FW_SYMLINKS}")
+  target_include_directories(${PLUGIN_NAME} PRIVATE
+    "${FW_SYMLINKS}/linux"
+    "${FW_SYMLINKS}/linux/flutter/include"
+    "${FW_SYMLINKS}/common/cpp/include"
+    "${FW_SYMLINKS}/third_party/libwebrtc/include"
+  )
+  target_compile_definitions(${PLUGIN_NAME} PRIVATE DF_APM_HOOK_AVAILABLE)
+endif()
+
 set_target_properties(${PLUGIN_NAME} PROPERTIES
   CXX_VISIBILITY_PRESET hidden
   VISIBILITY_INLINES_HIDDEN 1

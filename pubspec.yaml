@@ -1,5 +1,5 @@
 name: deepfilter_livekit
-version: 0.1.5
+version: 0.1.6
 description: Real-time neural noise suppression for LiveKit using DeepFilterNet. Cross-platform with prebuilt binaries.
 repository: https://github.com/Noobidoo/deepfilter_livekit
 environment:

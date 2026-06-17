@@ -90,6 +90,3 @@ class LiveKitDeepFilter {
   }
 }
 
-final class DeepFilterMethodChannel {
-  static Future<bool> get isAvailable async => false;
-}

@@ -12,6 +12,7 @@ typedef void* (*DfCreate)(const char*, float, const char*);
 typedef size_t (*DfFrameLen)(void*);
 typedef float (*DfProcess)(void*, const float*, float*);
 typedef void (*DfFree)(void*);
+typedef void (*DfSetAttenLim)(void*, float);
 
 static struct {
   void* lib;
@@ -19,6 +20,7 @@ static struct {
   DfFrameLen frame_len;
   DfProcess process;
   DfFree free;
+  DfSetAttenLim set_atten_lim;
 } g_capi = {};
 
 // Base directory where the plugin SO lives (for default model path).
@@ -39,7 +41,14 @@ static bool load_capi() {
     }
   }
 
-  g_capi.lib = dlopen("libdeep_filter_lib.so", RTLD_NOW | RTLD_LOCAL);
+  if (g_base_dir[0] != '\0') {
+    char lib_path[4096];
+    snprintf(lib_path, sizeof(lib_path), "%s/libdeep_filter_lib.so", g_base_dir);
+    g_capi.lib = dlopen(lib_path, RTLD_NOW | RTLD_LOCAL);
+  }
+  if (!g_capi.lib) {
+    g_capi.lib = dlopen("libdeep_filter_lib.so", RTLD_NOW | RTLD_LOCAL);
+  }
   if (!g_capi.lib) {
     fprintf(stderr, "deepfilter_adapter: libdeep_filter_lib.so not found (%s)\n",
             dlerror());
@@ -49,6 +58,7 @@ static bool load_capi() {
   g_capi.frame_len = (DfFrameLen)dlsym(g_capi.lib, "df_get_frame_length");
   g_capi.process = (DfProcess)dlsym(g_capi.lib, "df_process_frame");
   g_capi.free = (DfFree)dlsym(g_capi.lib, "df_free");
+  g_capi.set_atten_lim = (DfSetAttenLim)dlsym(g_capi.lib, "df_set_atten_lim");
   if (!g_capi.create || !g_capi.frame_len || !g_capi.process || !g_capi.free) {
     fprintf(stderr, "deepfilter_adapter: capi symbols not found\n");
     dlclose(g_capi.lib);
@@ -57,11 +67,6 @@ static bool load_capi() {
   }
   fprintf(stderr, "deepfilter_adapter: capi loaded successfully\n");
   return true;
-}
-
-static bool directory_exists(const char* path) {
-  struct stat st;
-  return stat(path, &st) == 0 && S_ISDIR(st.st_mode);
 }
 
 // Resolve model path: use provided one, or default to <plugin_dir>/models.
@@ -76,17 +81,18 @@ static char* resolve_model_path(const char* model_path) {
   if (g_base_dir[0] == '\0') return nullptr;
 
   size_t base_len = strlen(g_base_dir);
-  char* default_path = new char[base_len + 8];
+  char* default_path = new char[base_len + 32];
   strcpy(default_path, g_base_dir);
-  strcat(default_path, "/models");
+  strcat(default_path, "/models/DeepFilterNet3_onnx.tar.gz");
 
-  if (!directory_exists(default_path)) {
-    fprintf(stderr, "deepfilter_adapter: default models dir not found, using stub\n");
+  struct stat st;
+  if (stat(default_path, &st) != 0 || !S_ISREG(st.st_mode)) {
+    fprintf(stderr, "deepfilter_adapter: default model file not found, using stub\n");
     delete[] default_path;
     return nullptr;
   }
 
-  fprintf(stderr, "deepfilter_adapter: using default model path\n");
+  fprintf(stderr, "deepfilter_adapter: using default model file\n");
   return default_path;
 }
 
@@ -101,7 +107,7 @@ static void* g_capi_state = nullptr;
 
 extern "C" {
 
-void* df_init(const char* model_path, int sample_rate) {
+__attribute__((visibility("default"))) void* df_init(const char* model_path, int sample_rate) {
   if (!load_capi()) {
     auto* df = new (std::nothrow) DeepFilterStub{};
     if (!df) return nullptr;
@@ -157,33 +163,43 @@ void* df_init(const char* model_path, int sample_rate) {
   return df;
 }
 
-int df_process_frame(void* state, const float* input, float* output, int num_samples) {
+__attribute__((visibility("default"))) int df_process_frame(void* state, const float* input, float* output, int num_samples) {
   if (g_capi_state && g_capi.lib) return (int)g_capi.process(state, input, output);
   for (int i = 0; i < num_samples; i++) output[i] = input[i];
   return num_samples;
 }
 
-int df_get_frame_size(void* state) {
+__attribute__((visibility("default"))) int df_get_frame_size(void* state) {
   if (g_capi_state && g_capi.lib) return (int)g_capi.frame_len(state);
   return static_cast<DeepFilterStub*>(state)->frame_size;
 }
 
-int df_get_sample_rate(void* state) {
+__attribute__((visibility("default"))) int df_get_sample_rate(void* state) {
   return 48000;
 }
 
-void df_destroy(void* state) {
+__attribute__((visibility("default"))) void df_destroy(void* state) {
   if (state == g_capi_state) {
     while (!g_capi_init_done.load())
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     if (g_capi.lib) g_capi.free(state);
+    g_capi_state = nullptr;
+    g_capi_init_attempted.store(false);
+    g_capi_init_done.store(false);
   } else {
     delete static_cast<DeepFilterStub*>(state);
   }
 }
 
-int df_is_real(void) {
+__attribute__((visibility("default"))) int df_is_real(void) {
   return (g_capi.lib && g_capi_init_done.load() && g_capi_state) ? 1 : 0;
+}
+
+__attribute__((visibility("default"))) void df_set_atten_lim_export(float lim_db) {
+  if (!g_capi_state || !g_capi.lib) return;
+  if (g_capi.set_atten_lim) {
+    g_capi.set_atten_lim(g_capi_state, lim_db);
+  }
 }
 
 }

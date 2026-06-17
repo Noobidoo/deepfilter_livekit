@@ -130,6 +130,30 @@ void DeepFilterPlugin::HandleMethodCall(
     }
     g_autoptr(GError) error = nullptr;
     fl_method_call_respond_success(method_call, nullptr, &error);
+  } else if (strcmp(method, "getFrameSize") == 0) {
+    if (!plugin->state_) {
+      g_autoptr(GError) error = nullptr;
+      fl_method_call_respond_error(
+          method_call, "NOT_INIT", "Not initialized", nullptr, &error);
+      return;
+    }
+    int frame_size = df_get_frame_size(
+        static_cast<DeepFilter*>(plugin->state_));
+    g_autoptr(GError) error = nullptr;
+    fl_method_call_respond_success(
+        method_call, fl_value_new_int(frame_size), &error);
+  } else if (strcmp(method, "getSampleRate") == 0) {
+    if (!plugin->state_) {
+      g_autoptr(GError) error = nullptr;
+      fl_method_call_respond_error(
+          method_call, "NOT_INIT", "Not initialized", nullptr, &error);
+      return;
+    }
+    int sample_rate = df_get_sample_rate(
+        static_cast<DeepFilter*>(plugin->state_));
+    g_autoptr(GError) error = nullptr;
+    fl_method_call_respond_success(
+        method_call, fl_value_new_int(sample_rate), &error);
   } else {
     g_autoptr(GError) error = nullptr;
     fl_method_call_respond_not_implemented(method_call, &error);

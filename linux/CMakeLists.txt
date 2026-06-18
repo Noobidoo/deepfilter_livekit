@@ -8,6 +8,8 @@ add_library(${PLUGIN_NAME} SHARED
   "src/deepfilter_adapter.cc"
 )
 
+target_compile_features(${PLUGIN_NAME} PRIVATE cxx_std_17)
+
 target_include_directories(${PLUGIN_NAME} PUBLIC
   "include"
 )

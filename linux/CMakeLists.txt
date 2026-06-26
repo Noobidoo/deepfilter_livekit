@@ -54,6 +54,11 @@ if(EXISTS "${MODELS_DIR}/DeepFilterNet3_onnx.tar.gz")
     COMMAND ${CMAKE_COMMAND} -E copy_directory
       "${MODELS_DIR}"
       "$<TARGET_FILE_DIR:${PLUGIN_NAME}>/models"
-    COMMENT "deepfilter_adapter: copying models to output"
+    COMMENT "deepfilter_adapter: copying models to build output"
   )
+  # Install models to bundle's lib/models/ for adapter auto-discovery.
+  # DESTINATION is relative to CMAKE_INSTALL_PREFIX (the bundle dir at install time).
+  install(DIRECTORY "${MODELS_DIR}/"
+    DESTINATION "lib/models"
+    COMPONENT Runtime)
 endif()

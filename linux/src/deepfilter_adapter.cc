@@ -9,6 +9,8 @@
 #include <vector>
 #include <mutex>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <limits.h>
 
 #ifdef DF_APM_HOOK_AVAILABLE
 #include "rtc_audio_processing.h"
@@ -77,7 +79,7 @@ static bool load_capi() {
   return true;
 }
 
-// Resolve model path: use provided one, or default to <plugin_dir>/models.
+// Resolve model path: use provided one, or auto-discover.
 // Returns heap-allocated string the caller must delete[].
 static char* resolve_model_path(const char* model_path) {
   if (model_path && model_path[0] != '\0') {
@@ -86,22 +88,44 @@ static char* resolve_model_path(const char* model_path) {
     return copy;
   }
 
-  if (g_base_dir[0] == '\0') return nullptr;
-
-  size_t base_len = strlen(g_base_dir);
-  char* default_path = new char[base_len + 32];
-  strcpy(default_path, g_base_dir);
-  strcat(default_path, "/models/DeepFilterNet3_onnx.tar.gz");
-
-  struct stat st;
-  if (stat(default_path, &st) != 0 || !S_ISREG(st.st_mode)) {
-    fprintf(stderr, "deepfilter_adapter: default model file not found, using stub\n");
-    delete[] default_path;
+  // Helper: check if a candidate path exists as a regular file.
+  auto check_path = [](const char* dir) -> char* {
+    size_t dlen = strlen(dir);
+    char* path = new char[dlen + 64];
+    const char* candidates[] = {"DeepFilterNet3_onnx.tar.gz"};
+    for (auto fname : candidates) {
+      snprintf(path, dlen + 64, "%s/models/%s", dir, fname);
+      struct stat st;
+      if (stat(path, &st) == 0 && S_ISREG(st.st_mode)) {
+        fprintf(stderr, "deepfilter_adapter: found model at %s\n", path);
+        return path;
+      }
+    }
+    delete[] path;
     return nullptr;
+  };
+
+  // 1. Check <plugin-dir>/models/
+  if (g_base_dir[0] != '\0') {
+    char* p = check_path(g_base_dir);
+    if (p) return p;
   }
 
-  fprintf(stderr, "deepfilter_adapter: using default model file\n");
-  return default_path;
+  // 2. Check <exe-dir>/models/ (via /proc/self/exe)
+  char exe_path[PATH_MAX];
+  ssize_t exe_len = readlink("/proc/self/exe", exe_path, sizeof(exe_path) - 1);
+  if (exe_len > 0) {
+    exe_path[exe_len] = '\0';
+    char* last_slash = strrchr(exe_path, '/');
+    if (last_slash) {
+      *last_slash = '\0';
+      char* p = check_path(exe_path);
+      if (p) return p;
+    }
+  }
+
+  fprintf(stderr, "deepfilter_adapter: no model file found, using stub\n");
+  return nullptr;
 }
 
 struct DeepFilterStub {
@@ -337,13 +361,14 @@ __attribute__((visibility("default"))) void* df_init(const char* model_path, int
 }
 
 __attribute__((visibility("default"))) int df_process_frame(void* state, const float* input, float* output, int num_samples) {
-  if (g_capi_state && g_capi.lib) return (int)g_capi.process(state, input, output);
+  (void)state;
+  if (g_capi_state && g_capi.lib) return (int)g_capi.process(g_capi_state, input, output);
   for (int i = 0; i < num_samples; i++) output[i] = input[i];
   return num_samples;
 }
 
 __attribute__((visibility("default"))) int df_get_frame_size(void* state) {
-  if (g_capi_state && g_capi.lib) return (int)g_capi.frame_len(state);
+  if (g_capi_state && g_capi.lib) return (int)g_capi.frame_len(g_capi_state);
   return static_cast<DeepFilterStub*>(state)->frame_size;
 }
 
